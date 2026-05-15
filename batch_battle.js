@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { buildChallengeBody } = require("./battle_tools");
 
 let cachedEnv = null;
 
@@ -21,7 +22,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function challenge(index) {
+async function challenge(index, options) {
   const env = readEnv();
   for (let attempt = 1; attempt <= 4; attempt++) {
     const response = await fetch("https://agentank.ai/api/agent/tank/challenge", {
@@ -30,7 +31,7 @@ async function challenge(index) {
         Authorization: `Bearer ${env.TANK_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ randomOpponent: true, mapId: "classic" }),
+      body: JSON.stringify(buildChallengeBody(options)),
     });
     const text = await response.text();
     if (response.status === 429 && attempt < 4) {
@@ -69,15 +70,15 @@ function retryDelay(text) {
   return 3500;
 }
 
-async function runBatch(count, outputFile) {
+async function runBatch(count, outputFile, options) {
   const results = [];
   for (let i = 1; i <= count; i++) {
-    const result = await challenge(i);
+    const result = await challenge(i, options);
     results.push(result);
     console.log(`battle ${i}/${count}: ${result.status} ${result.replayUrl || result.error || ""}`);
     if (i < count) await sleep(2500);
   }
-  const report = { generatedAt: new Date().toISOString(), tankId: 707, results };
+  const report = { generatedAt: new Date().toISOString(), tankId: 707, challenge: buildChallengeBody(options), results };
   fs.writeFileSync(outputFile || "battle_report.json", JSON.stringify(report, null, 2));
   return report;
 }
