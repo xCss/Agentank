@@ -538,6 +538,7 @@ function shouldSkipCloakLostStar(myPos, enemyTank, star, map) {
   var myDistance = pathDistance(myPos, star, map, enemyTank);
   var enemyDistance = pathDistance(enemyTank.position, star, map, null);
   if (myDistance === null || enemyDistance === null) return false;
+  if (enemyDistance <= 4 && myDistance >= 8 && myDistance - enemyDistance >= 4) return true;
   return enemyDistance <= 12 && myDistance >= 14 && myDistance - enemyDistance >= 6;
 }
 
