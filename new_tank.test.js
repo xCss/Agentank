@@ -521,6 +521,20 @@ assert(
 }
 
 {
+  const me = makeMe("right", [9, 1]);
+  context.onIdle(
+    me,
+    { tank: { position: [4, 1], direction: "right" }, bullet: null, status: {}, skill: null },
+    { map: classicMap(), star: [11, 1], frames: 5101 }
+  );
+  assert.strictEqual(
+    me.calls[0],
+    "go",
+    "onIdle should keep racing a near outer-lane star when already moving away from a distant aimed gunline"
+  );
+}
+
+{
   const me = makeMe("left", [12, 1]);
   context.onIdle(
     me,

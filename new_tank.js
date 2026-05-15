@@ -22,6 +22,10 @@ function onIdle(me, enemy, game) {
 
   // 闪避 - 仅在高度威胁时执行
   if (danger) {
+    if (shouldRaceNearOuterStarFromDistantAim(me, myPos, myDir, map, enemyTank, enemyBullet, enemy, game.star, game.frames)) {
+      me.go();
+      return;
+    }
     if (shouldAdvanceSoftStarNow(me, myPos, myDir, map, enemyTank, enemyBullet, enemy, game.star, game.frames)) {
       me.go();
       return;
@@ -147,6 +151,24 @@ function shouldStepOutOfTwoTileTurnShot(position, next, enemyTank, enemyBullet, 
   if (canShoot(enemyTank.position, next, map)) return false;
   if (bulletThreatLevel(next, enemyBullet, map) > 0) return false;
   return tankThreatLevel(next, enemyTank, map, enemy) < 4;
+}
+
+function shouldRaceNearOuterStarFromDistantAim(me, myPos, myDir, map, enemyTank, enemyBullet, enemy, star, frame) {
+  if (!star || !enemyTank || !enemyAimsAt(enemyTank, myPos, map)) return false;
+  if (!isOuterEdge(myPos, map) || !isOuterEdge(star, map)) return false;
+  if (manhattan(myPos, enemyTank.position) < 5) return false;
+  if (manhattan(myPos, star) > 2) return false;
+  var target = chooseTarget(myPos, enemyTank, star, map, frame);
+  if (!samePos(target, star)) return false;
+  var next = add(myPos, delta(myDir));
+  if (!samePos(next, star) && manhattan(next, star) >= manhattan(myPos, star)) return false;
+  if (!isPassable(next, map, enemyTank)) return false;
+  var landing = moveLanding(myPos, myDir, map, enemyTank, me.status && me.status.boosted);
+  if (samePos(landing, myPos)) return false;
+  if (!isMovingAway(myPos, landing, enemyTank.position)) return false;
+  if (bulletThreatLevel(landing, enemyBullet, map) > 0) return false;
+  var landingLevel = threatLevel(landing, enemyTank, enemyBullet, map, enemy);
+  return landingLevel > 0 && landingLevel <= threatLevel(myPos, enemyTank, enemyBullet, map, enemy);
 }
 
 function isMovingAway(from, to, origin) {
