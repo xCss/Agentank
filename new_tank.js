@@ -616,7 +616,6 @@ function shouldBoost(me, currentDir, start, next, target, map, enemyTank, enemyB
   var second = add(first, delta(dir));
   if (!isPassable(first, map, enemyTank) || !isPassable(second, map, enemyTank)) return false;
   if (hiddenGrassBoostThreat(first, second, map, enemy, frame)) return false;
-  if (hiddenCloakBoostThreat(first, second, dir, map, enemy, frame)) return false;
   if (isThreatened(first, enemyTank, enemyBullet, map, enemy) || isThreatened(second, enemyTank, enemyBullet, map, enemy)) return false;
   if (target && !samePos(target, centerPoint(map))) {
     if (manhattan(start, target) < 4 && !samePos(second, target)) return false;
@@ -638,7 +637,6 @@ function shouldPreBoost(me, start, next, target, map, enemyTank, enemyBullet, en
   var second = add(first, delta(dir));
   if (!isPassable(first, map, enemyTank) || !isPassable(second, map, enemyTank)) return false;
   if (hiddenGrassBoostThreat(first, second, map, enemy, frame)) return false;
-  if (hiddenCloakBoostThreat(first, second, dir, map, enemy, frame)) return false;
   if (isThreatened(first, enemyTank, enemyBullet, map, enemy) || isThreatened(second, enemyTank, enemyBullet, map, enemy)) return false;
   return true;
 }
@@ -656,22 +654,6 @@ function hiddenGrassBoostThreat(first, second, map, enemy, frame) {
 function hiddenGrassBoostLaneThreat(position, origin, map) {
   if (manhattan(origin, position) > 8) return false;
   return canShoot(origin, position, map);
-}
-
-function hiddenCloakBoostThreat(first, second, dir, map, enemy, frame) {
-  if (!enemy || enemy.tank || !antMemory.enemyTank) return false;
-  var memory = antMemory.enemyTank;
-  if (!memory.skill || memory.skill.type !== "cloak") return false;
-  var age = (frame || 0) - (memory.frame || 0);
-  if (age < 0 || age > 14) return false;
-  if (dir !== memory.direction) return false;
-  return hiddenCloakBoostLaneThreat(first, memory.position, memory.direction, map) ||
-    hiddenCloakBoostLaneThreat(second, memory.position, memory.direction, map);
-}
-
-function hiddenCloakBoostLaneThreat(position, origin, dir, map) {
-  if (manhattan(origin, position) > 8) return false;
-  return isInDirection(origin, position, dir) && clearLine(origin, position, map);
 }
 
 function isThreatened(position, enemyTank, enemyBullet, map, enemy) {

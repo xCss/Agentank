@@ -395,31 +395,6 @@ assert(
 }
 
 {
-  const map = openMap(20);
-  context.antMemory = {};
-  const scout = makeMe("up", [6, 7]);
-  scout.skill = { type: "boost", remainingCooldownFrames: 20 };
-  context.onIdle(
-    scout,
-    { tank: { position: [5, 7], direction: "right" }, bullet: null, status: {}, skill: { type: "cloak", remainingCooldownFrames: 0 } },
-    { map, star: [17, 9], frames: 34 }
-  );
-
-  const me = makeMe("right", [6, 7]);
-  me.skill = { type: "boost", remainingCooldownFrames: 0 };
-  context.onIdle(
-    me,
-    { tank: null, bullet: null, status: { cloaked: true }, skill: { type: "cloak", remainingCooldownFrames: 0 } },
-    { map, star: [17, 9], frames: 44 }
-  );
-  assert.notStrictEqual(
-    me.calls[0],
-    "boost",
-    "onIdle should not boost along a recently cloaked enemy gunline"
-  );
-}
-
-{
   const me = makeMe("up", [4, 7]);
   context.onIdle(
     me,
