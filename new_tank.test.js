@@ -591,6 +591,20 @@ assert(
 }
 
 {
+  const me = makeMe("down", [10, 1]);
+  context.onIdle(
+    me,
+    { tank: { position: [15, 1], direction: "right" }, bullet: null, status: {}, skill: null },
+    { map: classicMap(), star: [13, 8], frames: 6202 }
+  );
+  assert.strictEqual(
+    me.calls[0],
+    "go",
+    "onIdle should keep leaving a top-lane same-line standoff instead of turning back to aim"
+  );
+}
+
+{
   const me = makeMe("right", [2, 1]);
   context.onIdle(
     me,

@@ -7,6 +7,11 @@ function onIdle(me, enemy, game) {
   antMemory.threatCache = {};
   var danger = isThreatened(myPos, enemyTank, enemyBullet, map, enemy);
 
+  if (shouldKeepLeavingEdgeStandoff(myPos, myDir, map, enemyTank, enemyBullet, enemy)) {
+    me.go();
+    return;
+  }
+
   // 射击优先级最高
   if (enemyTank && canShoot(myPos, enemyTank.position, map) && !enemyShielded(enemy)) {
     var shotDir = directionTo(myPos, enemyTank.position);
@@ -140,6 +145,20 @@ function shouldSkipAimTurn(myPos, enemyTank, map) {
     canShoot(enemyTank.position, myPos, map) &&
     !enemyAimsAt(enemyTank, myPos, map) &&
     manhattan(myPos, enemyTank.position) <= 4;
+}
+
+function shouldKeepLeavingEdgeStandoff(position, direction, map, enemyTank, enemyBullet, enemy) {
+  if (!enemyTank || position[0] !== enemyTank.position[0] && position[1] !== enemyTank.position[1]) return false;
+  var maxY = map[0].length - 2;
+  if (position[1] === 1 && direction !== "down") return false;
+  if (position[1] === maxY && direction !== "up") return false;
+  if (position[1] !== 1 && position[1] !== maxY) return false;
+  if (manhattan(position, enemyTank.position) < 3 || manhattan(position, enemyTank.position) > 8) return false;
+  var next = add(position, delta(direction));
+  if (!isPassable(next, map, enemyTank)) return false;
+  if (canShoot(enemyTank.position, next, map)) return false;
+  if (isThreatened(next, enemyTank, enemyBullet, map, enemy)) return false;
+  return edgePenalty(next, map) < edgePenalty(position, map);
 }
 
 function shouldDriveAwayNow(position, direction, map, enemyTank, enemyBullet, enemy, goal) {
