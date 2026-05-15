@@ -5,6 +5,7 @@ function onIdle(me, enemy, game) {
   var enemyBullet = enemy.bullet;
   var map = game.map;
   antMemory.threatCache = {};
+  antMemory.currentFrame = game.frames || 0;
   var danger = isThreatened(myPos, enemyTank, enemyBullet, map, enemy);
 
   // 射击优先级最高
@@ -166,7 +167,9 @@ function safeMoveToward(me, currentDir, from, to, map, enemyTank, enemyBullet, e
   var dir = directionTo(from, to);
   if (currentDir === dir) {
     var landing = moveLanding(from, dir, map, enemyTank, me.status && me.status.boosted);
-    if (!samePos(landing, from) && !isThreatened(landing, enemyTank, enemyBullet, map, enemy)) {
+    if (!samePos(landing, from) &&
+        !isThreatened(landing, enemyTank, enemyBullet, map, enemy) &&
+        !hiddenGrassMoveThreat(landing, map, enemy, antMemory.currentFrame)) {
       me.go();
       return;
     }
@@ -208,6 +211,10 @@ function safeMoveToward(me, currentDir, from, to, map, enemyTank, enemyBullet, e
     return;
   }
   moveToward(me, currentDir, from, to);
+}
+
+function hiddenGrassMoveThreat(position, map, enemy, frame) {
+  return hiddenGrassRememberedLaneThreat(position, map, enemy, frame);
 }
 
 function shouldQueueAimedGunEscape(from, dir, map, enemyTank, enemyBullet, enemy) {
@@ -619,16 +626,20 @@ function shouldPreBoost(me, start, next, target, map, enemyTank, enemyBullet, en
 }
 
 function hiddenGrassBoostThreat(first, second, map, enemy, frame) {
+  return hiddenGrassRememberedLaneThreat(first, map, enemy, frame) ||
+    hiddenGrassRememberedLaneThreat(second, map, enemy, frame);
+}
+
+function hiddenGrassRememberedLaneThreat(position, map, enemy, frame) {
   if (!enemy || enemy.tank || !antMemory.enemyTank) return false;
   var memory = antMemory.enemyTank;
   var age = (frame || 0) - (memory.frame || 0);
   if (age < 0 || age > 18) return false;
   if (!memory.position || map[memory.position[0]][memory.position[1]] !== "o") return false;
-  return hiddenGrassBoostLaneThreat(first, memory.position, map) ||
-    hiddenGrassBoostLaneThreat(second, memory.position, map);
+  return hiddenGrassLaneThreat(position, memory.position, map);
 }
 
-function hiddenGrassBoostLaneThreat(position, origin, map) {
+function hiddenGrassLaneThreat(position, origin, map) {
   if (manhattan(origin, position) > 8) return false;
   return canShoot(origin, position, map);
 }
