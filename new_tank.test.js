@@ -691,6 +691,30 @@ assert(
 
 {
   const map = classicMap();
+  context.antMemory = { enemyTank: { skill: { type: "cloak" } } };
+  assert.strictEqual(
+    JSON.stringify(context.chooseTarget([2, 2], { position: [16, 12], direction: "down" }, [16, 8], map, 5302)),
+    JSON.stringify(context.centerPoint(map)),
+    "chooseTarget should abandon a cloak-opponent near-edge star when Ant is far behind on BFS pace"
+  );
+}
+
+{
+  const map = classicMap();
+  context.antMemory = { enemyTank: { skill: { type: "boost" } } };
+  const measured = countPathDistanceCalls(() =>
+    context.chooseTarget([2, 2], { position: [16, 12], direction: "down" }, [16, 8], map, 5303)
+  );
+  assert.strictEqual(
+    JSON.stringify(measured.result),
+    JSON.stringify([16, 8]),
+    "chooseTarget should not apply the cloak-opponent lost-star rule to other skills"
+  );
+  assert.strictEqual(measured.calls, 0, "non-cloak near-edge stars should not pay extra BFS cost");
+}
+
+{
+  const map = classicMap();
   context.antMemory.starKey = "13,12";
   context.antMemory.starBestDistance = 7;
   context.antMemory.starLastImprovedFrame = 100;
