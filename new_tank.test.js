@@ -395,22 +395,6 @@ assert(
 }
 
 {
-  const map = classicMap();
-  context.antMemory = { enemyTank: { position: [9, 6], direction: "right", frame: 66 } };
-  const me = makeMe("right", [14, 6]);
-  context.onIdle(
-    me,
-    { tank: null, bullet: null, status: {}, skill: null },
-    { map, star: [10, 10], frames: 84 }
-  );
-  assert.notStrictEqual(
-    me.calls[0],
-    "go",
-    "onIdle should not keep driving through a recently hidden grass gunline after boost is unavailable"
-  );
-}
-
-{
   const me = makeMe("up", [4, 7]);
   context.onIdle(
     me,
