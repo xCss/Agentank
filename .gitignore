@@ -3,6 +3,7 @@ node_modules/
 battle_report.json
 progressive_report.json
 review_report.json
+review_*.json
 skill_report.json
 replay_analysis/
 runs/raw/

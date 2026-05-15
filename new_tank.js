@@ -197,6 +197,14 @@ function isMovingAway(from, to, origin) {
 
 function moveToward(me, currentDir, from, to) {
   var dir = directionTo(from, to);
+  if (me.status && me.status.stunned) {
+    if (currentDir === oppositeDir(dir)) {
+      me.go();
+    } else {
+      me.turn(dir);
+    }
+    return;
+  }
   if (currentDir === dir) {
     me.go();
   } else {
@@ -206,7 +214,9 @@ function moveToward(me, currentDir, from, to) {
 
 function safeMoveToward(me, currentDir, from, to, map, enemyTank, enemyBullet, enemy, goal) {
   var dir = directionTo(from, to);
-  if (currentDir === dir) {
+  var stunned = me.status && me.status.stunned;
+  var readyToGo = stunned ? currentDir === oppositeDir(dir) : currentDir === dir;
+  if (readyToGo) {
     var landing = moveLanding(from, dir, map, enemyTank, me.status && me.status.boosted);
     if (!samePos(landing, from) && !isThreatened(landing, enemyTank, enemyBullet, map, enemy)) {
       me.go();
@@ -232,6 +242,10 @@ function safeMoveToward(me, currentDir, from, to, map, enemyTank, enemyBullet, e
       me.turn(turn);
       return;
     }
+    return;
+  }
+  if (stunned) {
+    me.turn(dir);
     return;
   }
   if (shouldQueueBulletEscape(from, dir, map, enemyTank, enemyBullet, enemy)) {
@@ -1033,4 +1047,11 @@ function rotateRight(dir) {
   if (dir === "right") return "down";
   if (dir === "down") return "left";
   return "up";
+}
+
+function oppositeDir(dir) {
+  if (dir === "up") return "down";
+  if (dir === "right") return "left";
+  if (dir === "down") return "up";
+  return "right";
 }

@@ -296,6 +296,38 @@ assert(
 }
 
 {
+  const me = makeMe("right", [15, 6]);
+  me.status = { stunned: true };
+  context.antMemory = {};
+  context.onIdle(
+    me,
+    { tank: { position: [16, 8], direction: "up" }, bullet: null, status: {}, skill: { type: "stun", remainingCooldownFrames: 20 } },
+    { map: classicMap(), star: [13, 6], frames: 9300 }
+  );
+  assert.strictEqual(
+    me.calls[0],
+    "go",
+    "onIdle should use reversed movement while stunned when already facing opposite the target step"
+  );
+}
+
+{
+  const me = makeMe("left", [15, 6]);
+  me.status = { stunned: true };
+  context.antMemory = {};
+  context.onIdle(
+    me,
+    { tank: { position: [16, 8], direction: "up" }, bullet: null, status: {}, skill: { type: "stun", remainingCooldownFrames: 20 } },
+    { map: classicMap(), star: [13, 6], frames: 9301 }
+  );
+  assert.strictEqual(
+    me.calls[0],
+    "turn:left",
+    "onIdle should not go while stunned when reverse movement would drive away from the target step"
+  );
+}
+
+{
   const me = makeMe("right", [4, 4]);
   me.bullet = { position: [6, 4], direction: "right" };
   context.onIdle(
