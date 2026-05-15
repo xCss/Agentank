@@ -62,6 +62,20 @@
 - 顶层策略者必须维护“当前主攻技能桶、目标对手、基线版本、候选版本、样本量、保留/回滚理由”。subagent 可并行做 replay 复盘或脚本实现，但最终只允许顶层策略者决定是否发布、保留或回滚。
 - 代码策略仍然保持小而可解释：不要为每个对手堆专属 if；优先抽象为少量技能画像（高速、隐身伏击、瞬移、双弹、防护、控制），只影响抢星阈值、boost 使用、贴脸撤离和射击窗口这几个关键决策点。
 
+### 2026-05-15 多 subagent 流水线架构
+
+- 顶层策略者是唯一的全局决策者，负责维护胜率目标、当前技能桶、基线版本、候选版本、保留/回滚理由和停止条件。任何 subagent 的局部结论都只是输入，不能绕过顶层策略者直接发布或扩大补丁。
+- Runner subagent-A 只负责跑对战任务和入档，可长期执行 `node progressive_battle.js`、`node batch_battle.js 10` 或 `node review_challenge.js <TankID> [count]`。Runner 不修改 `new_tank.js`，不解释败因，不决定保留/回滚。
+- Classifier subagent-B 只负责读取原始报告并分类，默认执行 `node evolution_pipeline.js archive battle_report.json progressive`，必要时再执行 `node skill_report.js battle_report.json skill_report.json`。Classifier 输出技能桶、胜负摘要和 loss 队列，不改战术代码。
+- Analyst subagent-C 只负责分析 B 产出的分类结果和 loss replay，按技能、地图、失败原因、星星节奏、crash/score 类型归纳共性，输出 `runs/analysis/<runId>.md`。Analyst 不直接改代码。
+- Optimizer subagent-D 只负责根据 C 的窄问题实现最小补丁，必须先写红灯测试，再改 `new_tank.js` 或脚本。Optimizer 不发布代码；如果补丁变复杂，应主动收窄或退回提案。
+- Publisher subagent-E 只负责验证、发布和呼叫下一轮 Runner。发布前必须运行语法检查和相关测试；发布后必须把实战报告交回 B 入档。Publisher 不擅自修改策略，也不把失败批次当成功结论。
+- 发布硬门槛：E 只有在语法检查、相关测试、坐标对象扫描、递进门槛记录和顶层策略者决策齐全时才能执行 `node publish.js`。目标桶局部胜率提升不等于全局发布许可；若随机递进退化，默认回滚或收窄。
+- 文件交接约定：原始报告写入 `runs/raw/<runId>.json`，分类报告写入 `runs/classified/<runId>.json`，复盘分析写入 `runs/analysis/<runId>.md`，优化提案写入 `runs/proposals/<runId>.md`，顶层策略者决策追加到 `runs/decisions.jsonl`。`runs/raw/` 与 `runs/classified/` 是本地大样本档案，默认不提交到 git。
+- 决策日志必须包含 `runId`、`actor`、`decision`、`basis`、`targetBucket`、`baselineVersion` 和 `candidateVersion`；`decision` 只能是 `keep`、`rollback`、`narrow`、`continue` 或 `publish`。只有顶层策略者可以写入 keep/rollback/publish 决策。
+- 流水线默认顺序为 A 跑战斗 -> B 入档分类 -> C 复盘归因 -> D 小补丁 -> E 验证发布 -> A 再战斗。若任一阶段发现候选退化，顶层策略者必须记录回滚/收窄理由，再重新分配任务。
+- 可并行但不可混责：多个 Runner 可以同时收集不同目标对手样本；多个 Analyst 可以分析不同技能桶；但同一时间只应有一个 Optimizer 修改同一代码区域，避免冲突和过拟合。
+
 ## 自定义自动化技能：半自动进化 (Batch Evolution)
 
 用户可以通过指令 **“开始进化”** 或 **“开始战斗”** 来触发此技能。当接收到此指令时，AI 代理必须严格执行以下工作流：

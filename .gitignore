@@ -5,4 +5,7 @@ progressive_report.json
 review_report.json
 skill_report.json
 replay_analysis/
+runs/raw/
+runs/classified/
+runs/decisions.jsonl
 *_backup_*.js
