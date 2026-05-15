@@ -10,7 +10,9 @@ function onIdle(me, enemy, game) {
   // 射击优先级最高
   if (enemyTank && canShoot(myPos, enemyTank.position, map) && !enemyShielded(enemy)) {
     var shotDir = directionTo(myPos, enemyTank.position);
-    if (myDir === shotDir && canFire(me) && canTakeShot(myPos, enemyTank, enemyBullet, map)) {
+    if (myDir === shotDir && canFire(me) &&
+        (canTakeShot(myPos, enemyTank, enemyBullet, map) ||
+          shouldTakeLastResortShot(myPos, myDir, enemyTank, enemyBullet, map, enemy))) {
       me.fire();
       return;
     }
@@ -110,6 +112,27 @@ function canFire(me) {
 function canTakeShot(myPos, enemyTank, enemyBullet, map) {
   if (bulletThreatLevel(myPos, enemyBullet, map) > 0) return false;
   return !enemyAimsAt(enemyTank, myPos, map);
+}
+
+function shouldTakeLastResortShot(myPos, myDir, enemyTank, enemyBullet, map, enemy) {
+  if (!enemyTank || !enemyAimsAt(enemyTank, myPos, map)) return false;
+  if (bulletThreatLevel(myPos, enemyBullet, map) > 0) return false;
+  var distance = manhattan(myPos, enemyTank.position);
+  if (distance < 2 || distance > 4) return false;
+  if (directionTo(myPos, enemyTank.position) !== myDir) return false;
+  return !hasCleanOffLineEscape(myPos, enemyTank, enemyBullet, map, enemy);
+}
+
+function hasCleanOffLineEscape(myPos, enemyTank, enemyBullet, map, enemy) {
+  var dirs = ["up", "right", "down", "left"];
+  for (var i = 0; i < dirs.length; i++) {
+    var next = add(myPos, delta(dirs[i]));
+    if (!isPassable(next, map, enemyTank)) continue;
+    if (canShoot(enemyTank.position, next, map)) continue;
+    if (isThreatened(next, enemyTank, enemyBullet, map, enemy)) continue;
+    return true;
+  }
+  return false;
 }
 
 function shouldSkipAimTurn(myPos, enemyTank, map) {

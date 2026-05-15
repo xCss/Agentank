@@ -423,6 +423,20 @@ assert(
 }
 
 {
+  const me = makeMe("right", [3, 4]);
+  context.onIdle(
+    me,
+    { tank: { position: [5, 4], direction: "left" }, bullet: null, status: {}, skill: null },
+    { map: classicMap(), star: null, frames: 5201 }
+  );
+  assert.strictEqual(
+    me.calls[0],
+    "fire",
+    "onIdle should take a last-resort shot from a two-tile aimed gunline when no off-line escape exists"
+  );
+}
+
+{
   const me = makeMe("right", [2, 6]);
   context.onIdle(
     me,
