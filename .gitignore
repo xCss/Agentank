@@ -1,0 +1,6 @@
+.env
+node_modules/
+battle_report.json
+progressive_report.json
+replay_analysis/
+*_backup_*.js
