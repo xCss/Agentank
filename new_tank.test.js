@@ -691,54 +691,6 @@ assert(
 
 {
   const map = classicMap();
-  context.antMemory = { enemyTank: { skill: { type: "cloak" } } };
-  assert.strictEqual(
-    JSON.stringify(context.chooseTarget([2, 2], { position: [16, 12], direction: "down" }, [16, 8], map, 5302)),
-    JSON.stringify(context.centerPoint(map)),
-    "chooseTarget should abandon a cloak-opponent near-edge star when Ant is far behind on BFS pace"
-  );
-}
-
-{
-  const map = classicMap();
-  context.antMemory = { enemyTank: { skill: { type: "cloak" } } };
-  assert.strictEqual(
-    JSON.stringify(context.chooseTarget([9, 7], { position: [17, 7], direction: "left" }, [16, 9], map, 5304)),
-    JSON.stringify(context.centerPoint(map)),
-    "chooseTarget should abandon a medium near-edge star when a cloak opponent is already close"
-  );
-}
-
-{
-  const map = classicMap();
-  context.antMemory = { enemyTank: { skill: { type: "cloak" } } };
-  const measured = countPathDistanceCalls(() =>
-    context.chooseTarget([9, 7], { position: [12, 1], direction: "right" }, [11, 6], map, 5305)
-  );
-  assert.strictEqual(
-    JSON.stringify(measured.result),
-    JSON.stringify([11, 6]),
-    "chooseTarget should still chase close cloak-opponent stars where Ant can arrive quickly"
-  );
-  assert.strictEqual(measured.calls, 0, "close cloak stars should not pay BFS cost");
-}
-
-{
-  const map = classicMap();
-  context.antMemory = { enemyTank: { skill: { type: "boost" } } };
-  const measured = countPathDistanceCalls(() =>
-    context.chooseTarget([2, 2], { position: [16, 12], direction: "down" }, [16, 8], map, 5303)
-  );
-  assert.strictEqual(
-    JSON.stringify(measured.result),
-    JSON.stringify([16, 8]),
-    "chooseTarget should not apply the cloak-opponent lost-star rule to other skills"
-  );
-  assert.strictEqual(measured.calls, 0, "non-cloak near-edge stars should not pay extra BFS cost");
-}
-
-{
-  const map = classicMap();
   context.antMemory.starKey = "13,12";
   context.antMemory.starBestDistance = 7;
   context.antMemory.starLastImprovedFrame = 100;

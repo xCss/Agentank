@@ -489,10 +489,6 @@ function chooseTarget(myPos, enemyTank, star, map, frame) {
     return centerPoint(map);
   }
 
-  if (shouldSkipCloakLostStar(myPos, enemyTank, star, map)) {
-    return centerPoint(map);
-  }
-
   if (isOuterEdge(star, map) && enemyTank) {
     var myDistance = pathDistance(myPos, star, map, enemyTank);
     var enemyDistance = pathDistance(enemyTank.position, star, map, null);
@@ -530,20 +526,6 @@ function shouldSkipClearlyLostInteriorStar(myPos, enemyTank, star, map) {
   if (myDistance === null || enemyDistance === null) return false;
   if (enemyDistance <= 4 && myDistance >= 8 && myDistance - enemyDistance >= 5) return true;
   return enemyDistance <= 8 && myDistance >= 16 && myDistance - enemyDistance >= 8;
-}
-
-function shouldSkipCloakLostStar(myPos, enemyTank, star, map) {
-  if (!enemyTank || !rememberedEnemyHasSkill("cloak")) return false;
-  if (manhattan(myPos, star) < 8) return false;
-  var myDistance = pathDistance(myPos, star, map, enemyTank);
-  var enemyDistance = pathDistance(enemyTank.position, star, map, null);
-  if (myDistance === null || enemyDistance === null) return false;
-  if (enemyDistance <= 4 && myDistance >= 8 && myDistance - enemyDistance >= 4) return true;
-  return enemyDistance <= 12 && myDistance >= 14 && myDistance - enemyDistance >= 6;
-}
-
-function rememberedEnemyHasSkill(type) {
-  return !!(antMemory.enemyTank && antMemory.enemyTank.skill && antMemory.enemyTank.skill.type === type);
 }
 
 function centerPoint(map) {
